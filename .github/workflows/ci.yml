@@ -1,0 +1,43 @@
+name: Build Examples
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example:
+          - nextjs-quickstart
+          - nextjs-send-transaction
+          - nextjs-sign-message
+          - nextjs-gas-sponsorship
+          - nextjs-ens-profiles
+          - nextjs-siwe
+          - nextjs-permissions
+          - nextjs-subscription
+          - vanilla-quickstart
+          - node-server-charge
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: examples/${{ matrix.example }}
+        run: bun install
+
+      - name: Build
+        working-directory: examples/${{ matrix.example }}
+        run: bun run build
+        env:
+          NEXT_PUBLIC_JAW_API_KEY: test_key
+          SPENDER_PRIVATE_KEY: "0x0000000000000000000000000000000000000000000000000000000000000001"
+          JAW_API_KEY: test_key

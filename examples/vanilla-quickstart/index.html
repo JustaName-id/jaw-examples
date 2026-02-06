@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JAW Vanilla Quickstart</title>
+  </head>
+  <body class="min-h-screen bg-gray-950 text-white antialiased">
+    <main class="mx-auto flex min-h-screen max-w-xl flex-col items-center gap-8 p-8 py-16">
+      <!-- Header -->
+      <div class="text-center">
+        <h1 class="text-3xl font-bold">JAW Vanilla Quickstart</h1>
+        <p class="mt-2 text-gray-400">
+          Using <code class="text-gray-300">@jaw.id/core</code> without any
+          framework &mdash; plain HTML&nbsp;+&nbsp;TypeScript
+        </p>
+      </div>
+
+      <!-- Connect / Disconnect -->
+      <section id="section-connect" class="w-full rounded-xl border border-gray-800 bg-gray-900 p-6">
+        <h2 class="text-lg font-semibold">Wallet</h2>
+        <p class="mt-1 text-sm text-gray-400">Connect or disconnect your passkey smart account.</p>
+
+        <div class="mt-4 flex flex-col gap-3">
+          <button
+            id="btn-connect"
+            class="rounded-lg bg-blue-600 px-8 py-3 text-sm font-medium transition-colors hover:bg-blue-700 disabled:opacity-50"
+          >
+            Connect Wallet
+          </button>
+          <button
+            id="btn-disconnect"
+            class="hidden rounded-lg bg-red-600 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-red-700 disabled:opacity-50"
+          >
+            Disconnect
+          </button>
+        </div>
+
+        <!-- Account info (shown after connect) -->
+        <div id="account-info" class="mt-4 hidden rounded-xl border border-gray-800 bg-gray-950 px-6 py-4">
+          <p class="text-sm text-gray-400">Connected as</p>
+          <p id="account-address" class="mt-1 font-mono text-sm break-all"></p>
+          <p class="mt-2 text-sm text-gray-400">
+            Chain ID: <span id="account-chain" class="font-mono text-white"></span>
+          </p>
+        </div>
+      </section>
+
+      <!-- Send Transaction -->
+      <section id="section-send" class="hidden w-full rounded-xl border border-gray-800 bg-gray-900 p-6">
+        <h2 class="text-lg font-semibold">Send ETH</h2>
+        <p class="mt-1 text-sm text-gray-400">Send a single ETH transfer to any address.</p>
+
+        <div class="mt-4 flex flex-col gap-3">
+          <input
+            id="input-send-to"
+            type="text"
+            placeholder="Recipient address (0x...)"
+            class="rounded-lg border border-gray-800 bg-gray-950 px-4 py-2.5 text-sm placeholder-gray-600 outline-none focus:border-gray-700"
+          />
+          <input
+            id="input-send-amount"
+            type="text"
+            placeholder="Amount in ETH (e.g. 0.01)"
+            class="rounded-lg border border-gray-800 bg-gray-950 px-4 py-2.5 text-sm placeholder-gray-600 outline-none focus:border-gray-700"
+          />
+          <button
+            id="btn-send"
+            class="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-blue-700 disabled:opacity-50"
+          >
+            Send ETH
+          </button>
+        </div>
+
+        <div id="send-result" class="mt-4 hidden"></div>
+      </section>
+
+      <!-- Sign Message -->
+      <section id="section-sign" class="hidden w-full rounded-xl border border-gray-800 bg-gray-900 p-6">
+        <h2 class="text-lg font-semibold">Sign Message</h2>
+        <p class="mt-1 text-sm text-gray-400">Sign an arbitrary message with your account.</p>
+
+        <div class="mt-4 flex flex-col gap-3">
+          <input
+            id="input-sign-message"
+            type="text"
+            placeholder="Message to sign"
+            value="Hello from JAW!"
+            class="rounded-lg border border-gray-800 bg-gray-950 px-4 py-2.5 text-sm placeholder-gray-600 outline-none focus:border-gray-700"
+          />
+          <button
+            id="btn-sign"
+            class="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-blue-700 disabled:opacity-50"
+          >
+            Sign Message
+          </button>
+        </div>
+
+        <div id="sign-result" class="mt-4 hidden"></div>
+      </section>
+
+      <!-- Event Log -->
+      <section id="section-events" class="w-full rounded-xl border border-gray-800 bg-gray-900 p-6">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Event Log</h2>
+          <button
+            id="btn-clear-log"
+            class="text-xs text-gray-500 transition-colors hover:text-gray-300"
+          >
+            Clear
+          </button>
+        </div>
+        <p class="mt-1 text-sm text-gray-400">
+          Live events from the JAW provider.
+        </p>
+        <div
+          id="event-log"
+          class="mt-4 max-h-48 overflow-y-auto rounded-lg border border-gray-800 bg-gray-950 p-4 font-mono text-xs text-gray-400"
+        >
+          <p class="text-gray-600">Waiting for events...</p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
