@@ -2,6 +2,10 @@
   "name": "nextjs-headless-mode",
   "version": "0.1.0",
   "private": true,
+  "nx": {
+    "name": "nextjs-headless-mode",
+    "projectType": "application"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

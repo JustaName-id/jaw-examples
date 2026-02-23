@@ -2,6 +2,10 @@
   "name": "jaw-vanilla-quickstart",
   "version": "0.1.0",
   "private": true,
+  "nx": {
+    "name": "vanilla-quickstart",
+    "projectType": "application"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
