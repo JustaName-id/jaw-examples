@@ -2,8 +2,6 @@
 
 A minimal Node.js script that walks through the core JAW backend API step by step — no framework, no server, just plain TypeScript.
 
-> **Next step:** See [`node-server-charge`](../node-server-charge) for a real-world example of executing delegated charges inside an Express server.
-
 ## What This Demonstrates
 
 | Step | Feature | API |
@@ -17,7 +15,7 @@ A minimal Node.js script that walks through the core JAW backend API step by ste
 
 1. Install dependencies:
    ```bash
-   npm install
+   bun install
    ```
 
 2. Copy the environment file and fill in your values:
@@ -35,7 +33,7 @@ A minimal Node.js script that walks through the core JAW backend API step by ste
 
 3. Run the script:
    ```bash
-   npm run dev
+   bun run dev
    ```
 
 ## Expected Output

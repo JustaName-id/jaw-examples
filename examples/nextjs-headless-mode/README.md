@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JAW Next.js Headless Mode
 
-## Getting Started
+A Next.js app demonstrating the headless `Account` API from `@jaw.id/core` — direct access to passkey account operations without any wallet connector or provider abstraction.
 
-First, run the development server:
+## What This Demonstrates
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+| Page | Feature | API |
+| --- | --- | --- |
+| `/` | Create, login, and import passkey accounts | `Account.create`, `Account.get`, `Account.import` |
+| `/transactions` | Send ETH and batch transfers | `account.sendCalls` |
+| `/signing` | Sign messages and typed data | `account.signMessage` |
+| `/permissions` | Grant, list, and revoke ERC-7715 permissions | `account.grantPermissions`, `account.getPermissions`, `account.revokePermissions` |
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Copy the environment file:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Fill in your values:
 
-## Learn More
+   | Variable | Required | Description |
+   | --- | --- | --- |
+   | `NEXT_PUBLIC_JAW_API_KEY` | Yes | API key from [dashboard.jaw.id](https://dashboard.jaw.id) |
 
-To learn more about Next.js, take a look at the following resources:
+3. Install and run:
+   ```bash
+   bun install
+   bun dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) to get started.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Key Concepts
 
-## Deploy on Vercel
+**Headless mode** — uses `Account` methods directly instead of an EIP-1193 provider. This gives full control over the account lifecycle and is ideal when you need to build a fully custom UI or integrate into a non-standard environment.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Account lifecycle**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `Account.create(config, { username })` — register a new passkey and deploy a smart account
+- `Account.get(config, credentialId)` — resume an existing account by credential ID
+- `Account.import(config)` — import an account from a passkey already stored on the device
+- `Account.logout(apiKey)` — clear the local session
+
+**`Account.getStoredAccounts(apiKey)`** — returns all credentials stored locally so users can pick an account without re-authenticating.
+
+## Documentation
+
+- [JAW Docs](https://docs.jaw.id)
+- [Dashboard](https://dashboard.jaw.id)
