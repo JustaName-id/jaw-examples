@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { Account } from '@jaw.id/core';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createPublicClient, formatEther, http, parseEther } from 'viem';
-import { base } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -11,6 +11,7 @@ import { base } from 'viem/chains';
 const JAW_API_KEY = process.env.JAW_API_KEY;
 const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}` | undefined;
 const RECIPIENT = process.env.RECIPIENT_ADDRESS as `0x${string}` | undefined;
+const PAYMASTER_URL = process.env.PAYMASTER_URL;
 
 if (!JAW_API_KEY || !PRIVATE_KEY || !RECIPIENT) {
   console.error(
@@ -20,7 +21,7 @@ if (!JAW_API_KEY || !PRIVATE_KEY || !RECIPIENT) {
   process.exit(1);
 }
 
-const CHAIN_ID = 8453; // Base mainnet
+const CHAIN_ID = 84532; // Base Sepolia
 
 // ---------------------------------------------------------------------------
 // Main
@@ -38,16 +39,21 @@ async function main() {
 
   const signer = privateKeyToAccount(PRIVATE_KEY!);
   const account = await Account.fromLocalAccount(
-    { chainId: CHAIN_ID, apiKey: JAW_API_KEY! },
+    {
+      chainId: CHAIN_ID,
+      apiKey: JAW_API_KEY!,
+      ...(PAYMASTER_URL ? { paymasterUrl: PAYMASTER_URL } : {}),
+    },
     signer,
   );
 
-  const client = createPublicClient({ chain: base, transport: http() });
+  const client = createPublicClient({ chain: baseSepolia, transport: http() });
   const balance = await client.getBalance({ address: account.address });
 
   console.log(`  address : ${account.address}`);
   console.log(`  balance : ${formatEther(balance)} ETH`);
-  console.log(`  chain   : Base (${CHAIN_ID})\n`);
+  console.log(`  chain   : Base Sepolia (${CHAIN_ID})`);
+  console.log(`  paymaster: ${PAYMASTER_URL ? 'enabled' : 'none (account needs ETH)'}\n`);
 
   // ── Step 2: Sign a message ────────────────────────────────────────────────
   //
@@ -67,6 +73,9 @@ async function main() {
   //
   // sendTransaction submits a single call and waits until it is confirmed on-chain.
   // Returns the transaction hash once mined.
+  //
+  // The account must either hold ETH for gas, or have PAYMASTER_URL set in .env
+  // to sponsor fees via a paymaster (Pimlico, Etherspot, etc.).
 
   console.log('Step 3 — Send ETH (single, waits for confirmation)');
 
