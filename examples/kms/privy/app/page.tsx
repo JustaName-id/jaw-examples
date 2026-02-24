@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PrivyProvider, usePrivy, useWallets, toViemAccount } from '@privy-io/react-auth';
 import { Account } from '@jaw.id/core';
-import { parseEther, toHex, type Hex } from 'viem';
+import { parseEther, isAddress, toHex, type Hex } from 'viem';
 
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || '';
 const JAW_API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
@@ -14,11 +14,36 @@ function PrivyJAWDemo() {
   const { wallets, ready: walletsReady } = useWallets();
 
   const [jawAccount, setJawAccount] = useState<Account | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [accountLoading, setAccountLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [signature, setSignature] = useState<string | null>(null);
   const [creatingWallet, setCreatingWallet] = useState(false);
+
+  // Per-card state: Sign Message
+  const [signMsg, setSignMsg] = useState('');
+  const [signResult, setSignResult] = useState<string | null>(null);
+  const [signLoading, setSignLoading] = useState(false);
+
+  // Per-card state: Send Transaction
+  const [txTo, setTxTo] = useState('');
+  const [txAmount, setTxAmount] = useState('');
+  const [txResult, setTxResult] = useState<string | null>(null);
+  const [txLoading, setTxLoading] = useState(false);
+
+  // Per-card state: Grant Permission
+  const [grantSpender, setGrantSpender] = useState('');
+  const [grantExpiry, setGrantExpiry] = useState('86400');
+  const [grantTarget, setGrantTarget] = useState('');
+  const [grantFnSig, setGrantFnSig] = useState('');
+  const [grantToken, setGrantToken] = useState('');
+  const [grantAllowance, setGrantAllowance] = useState('');
+  const [grantPeriod, setGrantPeriod] = useState<'minute' | 'hour' | 'day' | 'week' | 'month' | 'year' | 'forever'>('day');
+  const [grantResult, setGrantResult] = useState<string | null>(null);
+  const [grantLoading, setGrantLoading] = useState(false);
+
+  // Per-card state: Revoke Permission
+  const [revokeId, setRevokeId] = useState('');
+  const [revokeResult, setRevokeResult] = useState<string | null>(null);
+  const [revokeLoading, setRevokeLoading] = useState(false);
 
   // Find the Privy embedded wallet
   const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
@@ -47,7 +72,7 @@ function PrivyJAWDemo() {
       return;
     }
 
-    setLoading(true);
+    setAccountLoading(true);
     setError(null);
 
     try {
@@ -104,71 +129,134 @@ function PrivyJAWDemo() {
       console.error('Failed to create JAW account:', err);
       setError(err instanceof Error ? err.message : 'Failed to create JAW account');
     } finally {
-      setLoading(false);
+      setAccountLoading(false);
     }
   };
 
-  // Sign a message
+  // --- Handlers ---
+
   const handleSignMessage = async () => {
-    if (!jawAccount) return;
-
-    setLoading(true);
+    if (!jawAccount || !signMsg.trim()) return;
+    setSignLoading(true);
+    setSignResult(null);
     setError(null);
-    setSignature(null);
-
     try {
-      const message = `Hello from JAW + Privy!\n\nTimestamp: ${new Date().toISOString()}`;
-      const sig = await jawAccount.signMessage(message);
-      setSignature(sig);
-      console.log('Signature:', sig);
+      const sig = await jawAccount.signMessage(signMsg);
+      setSignResult(sig);
     } catch (err) {
-      console.error('Failed to sign message:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign message');
     } finally {
-      setLoading(false);
+      setSignLoading(false);
     }
   };
 
-  // Send a test transaction (0.0001 ETH to self)
   const handleSendTransaction = async () => {
-    if (!jawAccount) return;
-
-    setLoading(true);
+    if (!jawAccount || !txTo || !txAmount) return;
+    if (!isAddress(txTo)) { setError('Invalid recipient address'); return; }
+    setTxLoading(true);
+    setTxResult(null);
     setError(null);
-    setTxHash(null);
-
     try {
-      const hash = await jawAccount.sendTransaction([
-        {
-          to: jawAccount.address,
-          value: parseEther('0.0001'),
-          data: '0x',
-        },
-      ]);
-      setTxHash(hash);
-      console.log('Transaction hash:', hash);
+      const hash = await jawAccount.sendTransaction([{
+        to: txTo as `0x${string}`,
+        value: parseEther(txAmount),
+        data: '0x',
+      }]);
+      setTxResult(hash);
     } catch (err) {
-      console.error('Failed to send transaction:', err);
       setError(err instanceof Error ? err.message : 'Failed to send transaction');
     } finally {
-      setLoading(false);
+      setTxLoading(false);
+    }
+  };
+
+  const handleGrantPermission = async () => {
+    if (!jawAccount || !grantSpender) return;
+    if (!isAddress(grantSpender)) { setError('Invalid spender address'); return; }
+    setGrantLoading(true);
+    setGrantResult(null);
+    setError(null);
+    try {
+      const expiry = Math.floor(Date.now() / 1000) + Number(grantExpiry);
+
+      const permissions: {
+        calls?: { target: `0x${string}`; selector?: Hex; functionSignature?: string }[];
+        spends?: { token: `0x${string}`; allowance: string; unit: 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year' | 'forever'; multiplier: number }[];
+      } = {};
+
+      if (grantTarget && isAddress(grantTarget)) {
+        // Detect if input is a 4-byte hex selector (0x + 8 hex chars) or a human-readable signature
+        const isSelector = grantFnSig && /^0x[0-9a-fA-F]{8}$/.test(grantFnSig);
+        permissions.calls = [{
+          target: grantTarget as `0x${string}`,
+          ...(isSelector
+            ? { selector: grantFnSig as Hex }
+            : grantFnSig ? { functionSignature: grantFnSig } : {}),
+        }];
+      }
+
+      if (grantToken && grantAllowance) {
+        const tokenAddr = grantToken.toLowerCase() === 'eth'
+          ? '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+          : grantToken;
+        if (tokenAddr !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' && !isAddress(tokenAddr)) {
+          setError('Invalid token address');
+          setGrantLoading(false);
+          return;
+        }
+        permissions.spends = [{
+          token: tokenAddr as `0x${string}`,
+          allowance: toHex(parseEther(grantAllowance)),
+          unit: grantPeriod,
+          multiplier: 1,
+        }];
+      }
+
+      const result = await jawAccount.grantPermissions(
+        expiry,
+        grantSpender as `0x${string}`,
+        permissions,
+      );
+      setGrantResult(result.permissionId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to grant permission');
+    } finally {
+      setGrantLoading(false);
+    }
+  };
+
+  const handleRevokePermission = async () => {
+    if (!jawAccount || !revokeId) return;
+    setRevokeLoading(true);
+    setRevokeResult(null);
+    setError(null);
+    try {
+      await jawAccount.revokePermission(revokeId as Hex);
+      setRevokeResult('Permission revoked successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to revoke permission');
+    } finally {
+      setRevokeLoading(false);
     }
   };
 
   // Auto-initialize JAW account when wallet is ready
   useEffect(() => {
-    if (authenticated && walletsReady && embeddedWallet && !jawAccount && !loading && !creatingWallet) {
+    if (authenticated && walletsReady && embeddedWallet && !jawAccount && !accountLoading && !creatingWallet) {
       initJAWAccount();
     }
-  }, [authenticated, walletsReady, embeddedWallet, jawAccount, loading, creatingWallet]);
+  }, [authenticated, walletsReady, embeddedWallet, jawAccount, accountLoading, creatingWallet]);
 
   // Reset state on logout
   useEffect(() => {
     if (!authenticated) {
       setJawAccount(null);
-      setTxHash(null);
-      setSignature(null);
       setError(null);
+      setSignMsg(''); setSignResult(null);
+      setTxTo(''); setTxAmount(''); setTxResult(null);
+      setGrantSpender(''); setGrantTarget(''); setGrantFnSig('');
+      setGrantToken(''); setGrantAllowance(''); setGrantResult(null);
+      setRevokeId(''); setRevokeResult(null);
     }
   }, [authenticated]);
 
@@ -224,7 +312,6 @@ function PrivyJAWDemo() {
                 </button>
               </div>
 
-              {/* Embedded Wallet */}
               {embeddedWallet && (
                 <div className="bg-gray-700/50 rounded-lg p-4">
                   <p className="text-sm text-gray-400 mb-1">Embedded Wallet (EOA Signer)</p>
@@ -235,7 +322,7 @@ function PrivyJAWDemo() {
 
             {/* JAW Account Section */}
             <div className="bg-gray-800 rounded-lg p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">Step 2: JAW Smart Account</h2>
+              <h2 className="text-xl font-semibold mb-4">JAW Smart Account</h2>
 
               {(!walletsReady || creatingWallet) ? (
                 <div className="flex items-center gap-3">
@@ -250,7 +337,7 @@ function PrivyJAWDemo() {
                     No embedded wallet found. Please try logging out and back in.
                   </p>
                 </div>
-              ) : loading && !jawAccount ? (
+              ) : accountLoading && !jawAccount ? (
                 <div className="flex items-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                   <span className="text-gray-400">Creating smart account...</span>
@@ -265,11 +352,6 @@ function PrivyJAWDemo() {
                     <p className="text-sm text-gray-400 mb-1">Chain ID</p>
                     <p className="font-mono text-sm">{jawAccount.chainId} (Base Sepolia)</p>
                   </div>
-                  <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
-                    <p className="text-green-400 text-sm">
-                      Smart account created successfully! The Privy embedded wallet is now the owner/signer of this JAW smart account.
-                    </p>
-                  </div>
                 </div>
               ) : (
                 <button
@@ -281,60 +363,191 @@ function PrivyJAWDemo() {
               )}
             </div>
 
-            {/* Actions Section */}
+            {/* Action Cards */}
             {jawAccount && (
-              <div className="bg-gray-800 rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold mb-4">Step 3: Test Actions</h2>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
+              <>
+                {/* Sign Message Card */}
+                <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-semibold mb-4">Sign Message</h3>
+                  <textarea
+                    value={signMsg}
+                    onChange={(e) => setSignMsg(e.target.value)}
+                    placeholder="Enter message to sign..."
+                    rows={3}
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500 mb-4 resize-none"
+                  />
                   <button
                     onClick={handleSignMessage}
-                    disabled={loading}
-                    className="py-3 px-6 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
+                    disabled={signLoading || !signMsg.trim()}
+                    className="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
                   >
-                    {loading ? 'Signing...' : 'Sign Message'}
+                    {signLoading ? 'Signing...' : 'Sign Message'}
                   </button>
-                  <button
-                    onClick={handleSendTransaction}
-                    disabled={loading}
-                    className="py-3 px-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
-                  >
-                    {loading ? 'Sending...' : 'Send Transaction'}
-                  </button>
+                  {signResult && (
+                    <div className="bg-gray-700/50 rounded-lg p-4 mt-4">
+                      <p className="text-sm text-gray-400 mb-1">Signature</p>
+                      <p className="font-mono text-xs break-all text-purple-400">{signResult}</p>
+                    </div>
+                  )}
                 </div>
 
-                <p className="text-gray-500 text-sm">
-                  Note: Transactions require Base Sepolia ETH in your smart account.
-                </p>
-              </div>
-            )}
+                {/* Send Transaction Card */}
+                <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-semibold mb-4">Send Transaction</h3>
+                  <input
+                    type="text"
+                    value={txTo}
+                    onChange={(e) => setTxTo(e.target.value)}
+                    placeholder="Recipient address (0x...)"
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500 mb-3"
+                  />
+                  <input
+                    type="text"
+                    value={txAmount}
+                    onChange={(e) => setTxAmount(e.target.value)}
+                    placeholder="Amount in ETH (e.g. 0.001)"
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500 mb-4"
+                  />
+                  <button
+                    onClick={handleSendTransaction}
+                    disabled={txLoading || !txTo || !txAmount}
+                    className="w-full py-3 px-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
+                  >
+                    {txLoading ? 'Sending...' : 'Send Transaction'}
+                  </button>
+                  <p className="text-gray-500 text-xs mt-2">
+                    Requires Base Sepolia ETH in your smart account.
+                  </p>
+                  {txResult && (
+                    <div className="bg-gray-700/50 rounded-lg p-4 mt-4">
+                      <p className="text-sm text-gray-400 mb-1">Transaction Hash</p>
+                      <a
+                        href={`https://sepolia.basescan.org/tx/${txResult}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs break-all text-green-400 hover:underline"
+                      >
+                        {txResult}
+                      </a>
+                    </div>
+                  )}
+                </div>
 
-            {/* Results Section */}
-            {(signature || txHash) && (
-              <div className="bg-gray-800 rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold mb-4">Results</h2>
+                {/* Grant Permission Card */}
+                <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-semibold mb-4">Grant Permission</h3>
 
-                {signature && (
-                  <div className="bg-gray-700/50 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-gray-400 mb-1">Signature</p>
-                    <p className="font-mono text-xs break-all text-purple-400">{signature}</p>
-                  </div>
-                )}
+                  <label className="block text-sm text-gray-400 mb-1">Spender Address *</label>
+                  <input
+                    type="text"
+                    value={grantSpender}
+                    onChange={(e) => setGrantSpender(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500 mb-3"
+                  />
 
-                {txHash && (
-                  <div className="bg-gray-700/50 rounded-lg p-4">
-                    <p className="text-sm text-gray-400 mb-1">Transaction Hash</p>
-                    <a
-                      href={`https://sepolia.basescan.org/tx/${txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-xs break-all text-green-400 hover:underline"
+                  <label className="block text-sm text-gray-400 mb-1">Expiry *</label>
+                  <select
+                    value={grantExpiry}
+                    onChange={(e) => setGrantExpiry(e.target.value)}
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white mb-4"
+                  >
+                    <option value="3600">1 hour</option>
+                    <option value="86400">1 day</option>
+                    <option value="604800">7 days</option>
+                    <option value="2592000">30 days</option>
+                  </select>
+
+                  <p className="text-sm text-gray-400 mt-2 mb-2 font-medium">Call Permission (optional)</p>
+                  <input
+                    type="text"
+                    value={grantTarget}
+                    onChange={(e) => setGrantTarget(e.target.value)}
+                    placeholder="Target contract address (0x...)"
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500 mb-3"
+                  />
+                  <input
+                    type="text"
+                    value={grantFnSig}
+                    onChange={(e) => setGrantFnSig(e.target.value)}
+                    placeholder="Selector (0xe0e0e0e0) or signature (transfer(address,uint256))"
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500 mb-4"
+                  />
+
+                  <p className="text-sm text-gray-400 mt-2 mb-2 font-medium">Spend Limit (optional)</p>
+                  <input
+                    type="text"
+                    value={grantToken}
+                    onChange={(e) => setGrantToken(e.target.value)}
+                    placeholder='Token address or "ETH" for native'
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500 mb-3"
+                  />
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <input
+                      type="text"
+                      value={grantAllowance}
+                      onChange={(e) => setGrantAllowance(e.target.value)}
+                      placeholder="Allowance (e.g. 0.1)"
+                      className="bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500"
+                    />
+                    <select
+                      value={grantPeriod}
+                      onChange={(e) => setGrantPeriod(e.target.value as typeof grantPeriod)}
+                      className="bg-gray-700 rounded-lg p-3 text-white"
                     >
-                      {txHash}
-                    </a>
+                      <option value="minute">Per Minute</option>
+                      <option value="hour">Per Hour</option>
+                      <option value="day">Per Day</option>
+                      <option value="week">Per Week</option>
+                      <option value="month">Per Month</option>
+                      <option value="year">Per Year</option>
+                      <option value="forever">Forever</option>
+                    </select>
                   </div>
-                )}
-              </div>
+
+                  <button
+                    onClick={handleGrantPermission}
+                    disabled={grantLoading || !grantSpender}
+                    className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
+                  >
+                    {grantLoading ? 'Granting...' : 'Grant Permission'}
+                  </button>
+
+                  {grantResult && (
+                    <div className="bg-gray-700/50 rounded-lg p-4 mt-4">
+                      <p className="text-sm text-gray-400 mb-1">Permission ID</p>
+                      <p className="font-mono text-xs break-all text-blue-400">{grantResult}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Revoke Permission Card */}
+                <div className="bg-gray-800 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-semibold mb-4">Revoke Permission</h3>
+                  <input
+                    type="text"
+                    value={revokeId}
+                    onChange={(e) => setRevokeId(e.target.value)}
+                    placeholder="Permission ID (0x...)"
+                    className="w-full bg-gray-700 rounded-lg p-3 text-white placeholder-gray-500 mb-4"
+                  />
+                  <button
+                    onClick={handleRevokePermission}
+                    disabled={revokeLoading || !revokeId}
+                    className="w-full py-3 px-6 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
+                  >
+                    {revokeLoading ? 'Revoking...' : 'Revoke Permission'}
+                  </button>
+                  <p className="text-gray-500 text-xs mt-2">
+                    Revocation is permanent and requires an on-chain transaction.
+                  </p>
+                  {revokeResult && (
+                    <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 mt-4">
+                      <p className="text-green-400 text-sm">{revokeResult}</p>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             {/* Error Section */}
