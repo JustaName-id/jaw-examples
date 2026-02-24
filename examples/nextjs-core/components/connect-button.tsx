@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { jaw } from "@/lib/jaw";
 import { useJaw } from "@/app/providers";
 
@@ -8,6 +8,9 @@ export function ConnectButton() {
   const { address, isConnected } = useJaw();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   async function handleConnect() {
     setIsConnecting(true);
@@ -27,7 +30,7 @@ export function ConnectButton() {
     }
   }
 
-  if (isConnected) {
+  if (mounted && isConnected) {
     return (
       <div className="flex flex-col items-center gap-4">
         <div className="rounded-xl border border-gray-800 bg-gray-900 px-6 py-4">

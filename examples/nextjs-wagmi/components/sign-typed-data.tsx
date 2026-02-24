@@ -6,7 +6,7 @@ const typedData = {
   domain: {
     name: "JAW Sign Message Demo",
     version: "1",
-    chainId: 1,
+    chainId: 84532,
   },
   types: {
     Mail: [

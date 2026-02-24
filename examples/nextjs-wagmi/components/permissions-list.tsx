@@ -105,7 +105,7 @@ export function PermissionsList() {
                       <div>
                         <p className="text-xs text-gray-500">Expires</p>
                         <p className="mt-0.5 text-sm">
-                          {formatExpiry(permission.expiry)}
+                          {formatExpiry(permission.end)}
                         </p>
                       </div>
                     </div>

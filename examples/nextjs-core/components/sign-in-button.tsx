@@ -40,7 +40,7 @@ export function SignInButton() {
           capabilities: {
             signInWithEthereum: {
               nonce,
-              chainId: "0x1",
+              chainId: "0xaa36a7",
               domain: window.location.host,
               uri: window.location.origin,
               statement: "Sign in to JAW SIWE Demo",

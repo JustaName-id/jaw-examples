@@ -308,7 +308,8 @@ function TxStatus({ id, error }: { id?: string; error: Error | null }) {
         <p className="text-sm font-medium text-green-400">
           Transaction submitted
         </p>
-        <p className="mt-1 font-mono text-xs text-green-400/80 break-all">
+        <p className="mt-1 text-xs text-green-400/60">User Op ID</p>
+        <p className="mt-0.5 font-mono text-xs text-green-400/80 break-all">
           {id}
         </p>
       </div>
