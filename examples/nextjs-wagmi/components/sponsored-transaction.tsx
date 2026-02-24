@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
 import { useSendCalls } from "wagmi";
 import { parseEther } from "viem";
 
 export function SponsoredTransaction() {
   const { isConnected, address } = useAccount();
-  const { sendCalls, isPending, data: id } = useSendCalls();
+  const chainId = useChainId();
+  const { sendCalls, isPending, data } = useSendCalls();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("0.0001");
 
@@ -18,6 +19,7 @@ export function SponsoredTransaction() {
   const handleSend = () => {
     const to = (recipient || address) as `0x${string}`;
 
+    const pimlicoApiKey = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
     sendCalls({
       calls: [
         {
@@ -25,6 +27,13 @@ export function SponsoredTransaction() {
           value: parseEther(amount),
         },
       ],
+      capabilities: pimlicoApiKey
+        ? {
+            paymasterService: {
+              url: `https://api.pimlico.io/v2/${chainId}/rpc?apikey=${pimlicoApiKey}`,
+            },
+          }
+        : undefined,
     });
   };
 
@@ -100,11 +109,11 @@ export function SponsoredTransaction() {
             {isPending ? "Sending..." : "Send Gasless Transaction"}
           </button>
 
-          {id && (
+          {data?.id && (
             <div className="rounded-lg border border-gray-800 bg-gray-800/50 px-4 py-3">
               <p className="text-sm text-gray-400">Call Bundle ID</p>
               <p className="mt-1 font-mono text-xs break-all text-gray-300">
-                {id}
+                {data.id}
               </p>
             </div>
           )}
@@ -117,8 +126,10 @@ export function SponsoredTransaction() {
         <ol className="mt-3 space-y-2 text-sm text-gray-400">
           <li className="flex gap-2">
             <span className="shrink-0 font-mono text-gray-600">1.</span>
-            The JAW connector is configured with a paymaster URL in{" "}
-            <code className="text-gray-300">lib/config.ts</code>.
+            A paymaster URL is passed via the{" "}
+            <code className="text-gray-300">paymasterService</code> capability
+            directly in the <code className="text-gray-300">sendCalls</code>{" "}
+            call — scoped to this page only.
           </li>
           <li className="flex gap-2">
             <span className="shrink-0 font-mono text-gray-600">2.</span>

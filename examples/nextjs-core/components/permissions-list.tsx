@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { jaw } from "@/lib/jaw";
 
 interface Permission {
-  id: string;
+  permissionId: string;
   spender: string;
-  expiry: number;
+  end: number;
   permissions?: {
     spends?: Array<{
       token: string;
@@ -102,14 +102,14 @@ export function PermissionsList() {
           <ul className="flex flex-col gap-3">
             {permissions.map((permission) => (
               <li
-                key={permission.id}
+                key={permission.permissionId}
                 className="rounded-lg border border-gray-800 bg-gray-800/50 p-4"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     {/* Permission ID */}
                     <p className="font-mono text-xs text-gray-500 break-all">
-                      {permission.id}
+                      {permission.permissionId}
                     </p>
 
                     <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -139,7 +139,7 @@ export function PermissionsList() {
                       <div>
                         <p className="text-xs text-gray-500">Expires</p>
                         <p className="mt-0.5 text-sm">
-                          {formatExpiry(permission.expiry)}
+                          {formatExpiry(permission.end)}
                         </p>
                       </div>
                     </div>
@@ -147,7 +147,7 @@ export function PermissionsList() {
 
                   {/* Revoke button */}
                   <button
-                    onClick={() => handleRevoke(permission.id)}
+                    onClick={() => handleRevoke(permission.permissionId)}
                     disabled={isRevoking}
                     className="shrink-0 rounded-lg border border-red-800 bg-red-900/20 px-3 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-900/40 disabled:opacity-50"
                   >

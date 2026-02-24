@@ -1,14 +1,16 @@
 import { createConfig, http } from "wagmi";
-import { mainnet, base } from "wagmi/chains";
+import { baseSepolia, base } from "wagmi/chains";
 import { jaw } from "@jaw.id/wagmi";
 
 export const config = createConfig({
-  chains: [mainnet, base],
+  chains: [baseSepolia, base],
   connectors: [
     jaw({
       apiKey: process.env.NEXT_PUBLIC_JAW_API_KEY!,
       appName: "JAW Wagmi Examples",
       ens: process.env.NEXT_PUBLIC_ENS_DOMAIN,
+      defaultChainId: baseSepolia.id,
+      preference: { showTestnets: true },
       paymasters: process.env.NEXT_PUBLIC_PIMLICO_API_KEY
         ? {
             [base.id]: {
@@ -19,7 +21,7 @@ export const config = createConfig({
     }),
   ],
   transports: {
-    [mainnet.id]: http(),
+    [baseSepolia.id]: http(),
     [base.id]: http(),
   },
 });

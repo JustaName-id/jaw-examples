@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { useConnect, useDisconnect } from "@jaw.id/wagmi";
 import { config } from "@/lib/config";
@@ -8,8 +9,11 @@ export function ConnectButton() {
   const { address, isConnected } = useAccount();
   const { mutate: connect, isPending: isConnecting } = useConnect();
   const { mutate: disconnect, isPending: isDisconnecting } = useDisconnect();
+  const [mounted, setMounted] = useState(false);
 
-  if (isConnected) {
+  useEffect(() => setMounted(true), []);
+
+  if (mounted && isConnected) {
     return (
       <div className="flex flex-col items-center gap-4">
         <div className="rounded-xl border border-gray-800 bg-gray-900 px-6 py-4">

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useGrantPermissions } from "@jaw.id/wagmi";
+import { useChainId, useSwitchChain } from "wagmi";
 import { parseUnits, type Address } from "viem";
+import { baseSepolia } from "wagmi/chains";
 
 const USDC_ADDRESS: Address =
-  "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // USDC on Base
+  "0x036CbD53842c5426634e7929541eC2318f3dCF7e"; // USDC on Base Sepolia
 
 const DURATION_OPTIONS: Record<string, number> = {
   day: 24 * 60 * 60,
@@ -20,9 +22,11 @@ export function GrantPermission() {
   const [lastPermissionId, setLastPermissionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const chainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
   const { mutate: grantPermission, isPending } = useGrantPermissions();
 
-  function handleGrant() {
+  async function handleGrant() {
     setError(null);
     setLastPermissionId(null);
 
@@ -37,8 +41,18 @@ export function GrantPermission() {
       return;
     }
 
+    if (chainId !== baseSepolia.id) {
+      try {
+        await switchChainAsync({ chainId: baseSepolia.id });
+      } catch {
+        setError("Please switch to Base Sepolia to grant permissions.");
+        return;
+      }
+    }
+
     grantPermission(
       {
+        chainId: baseSepolia.id,
         expiry:
           Math.floor(Date.now() / 1000) + DURATION_OPTIONS[duration],
         spender: spender as Address,

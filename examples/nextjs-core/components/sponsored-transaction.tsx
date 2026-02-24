@@ -6,7 +6,7 @@ import { jaw } from "@/lib/jaw";
 import { useJaw } from "@/app/providers";
 
 export function SponsoredTransaction() {
-  const { isConnected, address } = useJaw();
+  const { isConnected, address, chainId } = useJaw();
   const [isPending, setIsPending] = useState(false);
   const [id, setId] = useState<string | undefined>();
   const [recipient, setRecipient] = useState("");
@@ -29,6 +29,11 @@ export function SponsoredTransaction() {
               value: numberToHex(parseEther(amount)),
             },
           ],
+          capabilities: {
+            paymasterService: {
+              url: `https://api.pimlico.io/v2/${chainId}/rpc?apikey=${process.env.NEXT_PUBLIC_PIMLICO_API_KEY}`,
+            },
+          },
         }],
       }) as { id: string };
       setId(result.id);

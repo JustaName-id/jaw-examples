@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSendCalls } from "wagmi";
 import { parseEther, encodeFunctionData } from "viem";
+import { baseSepolia } from "wagmi/chains";
 
 // Minimal ERC-20 ABI for the transfer function
 const erc20Abi = [
@@ -39,6 +40,7 @@ function SendEth() {
   function handleSend() {
     if (!to || !amount) return;
     sendCalls({
+      chainId: baseSepolia.id,
       calls: [
         {
           to: to as `0x${string}`,
@@ -79,7 +81,7 @@ function SendEth() {
         </button>
       </div>
 
-      <TxStatus id={data} error={error} />
+      <TxStatus id={data?.id} error={error} />
     </section>
   );
 }
@@ -97,6 +99,7 @@ function BatchSend() {
   function handleBatch() {
     if (!toA || !amountA || !toB || !amountB) return;
     sendCalls({
+      chainId: baseSepolia.id,
       calls: [
         {
           to: toA as `0x${string}`,
@@ -167,7 +170,7 @@ function BatchSend() {
         </button>
       </div>
 
-      <TxStatus id={data} error={error} />
+      <TxStatus id={data?.id} error={error} />
     </section>
   );
 }
@@ -191,6 +194,7 @@ function Erc20Transfer() {
     });
 
     sendCalls({
+      chainId: baseSepolia.id,
       calls: [
         {
           to: token as `0x${string}`,
@@ -238,7 +242,7 @@ function Erc20Transfer() {
         </button>
       </div>
 
-      <TxStatus id={data} error={error} />
+      <TxStatus id={data?.id} error={error} />
     </section>
   );
 }
@@ -264,7 +268,8 @@ function TxStatus({ id, error }: { id?: string; error: Error | null }) {
         <p className="text-sm font-medium text-green-400">
           Transaction submitted
         </p>
-        <p className="mt-1 font-mono text-xs text-green-400/80 break-all">
+        <p className="mt-1 text-xs text-green-400/60">User Op ID</p>
+        <p className="mt-0.5 font-mono text-xs text-green-400/80 break-all">
           {id}
         </p>
       </div>

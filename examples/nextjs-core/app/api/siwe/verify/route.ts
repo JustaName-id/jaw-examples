@@ -1,9 +1,9 @@
 import { parseSiweMessage, verifySiweMessage } from "viem/siwe";
 import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 
 const client = createPublicClient({
-  chain: mainnet,
+  chain: baseSepolia,
   transport: http(),
 });
 

@@ -21,8 +21,8 @@ async function getJustaName() {
     justaNameInstance = await JustaName.init({
       networks: [
         {
-          chainId: 1,
-          providerUrl: `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
+          chainId: 84532,
+          providerUrl: `https://base-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
         },
       ],
     });
@@ -54,7 +54,7 @@ export function ProfileResolver() {
       if (isAddress(trimmed)) {
         const result = await justaName.subnames.reverseResolve({
           address: trimmed as `0x${string}`,
-          chainId: 1,
+          chainId: 84532,
         });
 
         if (!result) {
