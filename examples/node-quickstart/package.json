@@ -1,15 +1,15 @@
 {
-  "name": "jaw-node-server-charge",
+  "name": "jaw-node-quickstart",
   "version": "0.1.0",
   "private": true,
   "nx": {
-    "name": "node-server-charge",
+    "name": "node-quickstart",
     "projectType": "application",
     "targets": {
       "dev": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "tsx watch src/index.ts",
+          "command": "tsx src/index.ts",
           "cwd": "{projectRoot}"
         }
       },
@@ -31,17 +31,16 @@
     }
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
   "dependencies": {
     "@jaw.id/core": "latest",
-    "express": "^4",
+    "dotenv": "^16",
     "viem": "^2"
   },
   "devDependencies": {
-    "@types/express": "^4",
     "@types/node": "^22",
     "tsx": "^4",
     "typescript": "^5"
