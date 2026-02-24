@@ -1,164 +1,145 @@
 import './style.css';
 import { JAW, Mode } from '@jaw.id/core';
-import { toHex, parseEther, formatEther } from 'viem';
+import { toHex, parseEther } from 'viem';
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function $(id: string): HTMLElement {
-  return document.getElementById(id)!;
-}
-
-function show(el: HTMLElement) {
-  el.classList.remove('hidden');
-}
-
-function hide(el: HTMLElement) {
-  el.classList.add('hidden');
-}
-
-function disable(el: HTMLElement) {
-  (el as HTMLButtonElement).disabled = true;
-}
-
-function enable(el: HTMLElement) {
-  (el as HTMLButtonElement).disabled = false;
-}
-
-function renderResult(
-  containerId: string,
-  type: 'success' | 'error',
-  title: string,
-  detail: string,
-) {
-  const container = $(containerId);
-  show(container);
-
-  if (type === 'success') {
-    container.innerHTML = `
-      <div class="rounded-lg border border-green-900 bg-green-950/50 px-4 py-3">
-        <p class="text-sm font-medium text-green-400">${title}</p>
-        <p class="mt-1 font-mono text-xs text-green-400/80 break-all">${detail}</p>
-      </div>
-    `;
-  } else {
-    container.innerHTML = `
-      <div class="rounded-lg border border-red-900 bg-red-950/50 px-4 py-3">
-        <p class="text-sm font-medium text-red-400">${title}</p>
-        <p class="mt-1 text-xs text-red-400/80 break-all">${detail}</p>
-      </div>
-    `;
-  }
-}
-
-function logEvent(message: string) {
-  const log = $('event-log');
-
-  // Clear the placeholder on the first real event
-  if (log.querySelector('.text-gray-600')) {
-    log.innerHTML = '';
-  }
-
-  const time = new Date().toLocaleTimeString();
-  const entry = document.createElement('p');
-  entry.textContent = `[${time}] ${message}`;
-  log.appendChild(entry);
-  log.scrollTop = log.scrollHeight;
-}
-
-// ---------------------------------------------------------------------------
-// Initialize JAW
+// 1. Initialize JAW — one instance, shared across the whole page
 // ---------------------------------------------------------------------------
 
 const jaw = JAW.create({
   apiKey: import.meta.env.VITE_JAW_API_KEY,
   appName: 'JAW Vanilla Quickstart',
   defaultChainId: 1,
-  preference: {
-    mode: Mode.CrossPlatform,
-  },
+  preference: { mode: Mode.CrossPlatform },
 });
 
+// provider is EIP-1193 compatible — works like MetaMask or any other wallet
 const provider = jaw.provider;
 
 // ---------------------------------------------------------------------------
-// State
+// DOM utilities
+// ---------------------------------------------------------------------------
+
+function $(id: string) {
+  return document.getElementById(id)!;
+}
+
+function show(el: Element) { el.classList.remove('hidden'); }
+function hide(el: Element) { el.classList.add('hidden'); }
+
+// Render a success or error card inside a result container
+function showResult(id: string, type: 'ok' | 'err', title: string, detail: string) {
+  const el = $(id);
+  show(el);
+  if (type === 'ok') {
+    el.innerHTML = `
+      <div class="rounded-lg border border-green-900 bg-green-950/50 px-4 py-3">
+        <p class="text-sm font-medium text-green-400">${title}</p>
+        <p class="mt-1 font-mono text-xs text-green-400/80 break-all">${detail}</p>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="rounded-lg border border-red-900 bg-red-950/50 px-4 py-3">
+        <p class="text-sm font-medium text-red-400">${title}</p>
+        <p class="mt-1 text-xs text-red-400/80 break-all">${detail}</p>
+      </div>`;
+  }
+}
+
+// Append a timestamped line to the event log
+function log(message: string) {
+  const el = $('event-log');
+  if (el.querySelector('.placeholder')) el.innerHTML = '';
+  const p = document.createElement('p');
+  p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+  el.appendChild(p);
+  el.scrollTop = el.scrollHeight;
+}
+
+// EIP-1193 defines code 4001 as "user rejected the request"
+function isUserRejection(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && 'code' in err
+    && (err as { code: number }).code === 4001;
+}
+
+// ---------------------------------------------------------------------------
+// 2. State — track the connected address
 // ---------------------------------------------------------------------------
 
 let connectedAddress: string | null = null;
 
-function setConnected(address: string, chainId?: number) {
+function onConnect(address: string, chainId: number) {
   connectedAddress = address;
-
-  // Update account display
   $('account-address').textContent = address;
-  $('account-chain').textContent = String(chainId ?? 1);
+  $('account-chain').textContent = String(chainId);
   show($('account-info'));
-
-  // Toggle buttons
   hide($('btn-connect'));
   show($('btn-disconnect'));
-
-  // Show interactive sections
   show($('section-send'));
   show($('section-sign'));
-
-  logEvent(`Connected: ${address}`);
+  log(`Connected: ${address}`);
 }
 
-function setDisconnected() {
+function onDisconnect() {
   connectedAddress = null;
-
-  // Update account display
   hide($('account-info'));
-  $('account-address').textContent = '';
-  $('account-chain').textContent = '';
-
-  // Toggle buttons
-  show($('btn-connect'));
   hide($('btn-disconnect'));
-
-  // Hide interactive sections
+  show($('btn-connect'));
   hide($('section-send'));
   hide($('section-sign'));
-
-  // Reset results
-  $('send-result').innerHTML = '';
-  hide($('send-result'));
-  $('sign-result').innerHTML = '';
-  hide($('sign-result'));
-
-  logEvent('Disconnected');
+  for (const id of ['send-result', 'sign-result']) {
+    $(id).innerHTML = '';
+    hide($(id));
+  }
+  log('Disconnected');
 }
 
 // ---------------------------------------------------------------------------
-// Connect
+// 3. Poll for bundle confirmation
+//    wallet_sendCalls returns immediately with a bundle ID.
+//    Poll wallet_getCallsStatus until it leaves the Pending (100) state.
+// ---------------------------------------------------------------------------
+
+async function waitForBundle(bundleId: string): Promise<number> {
+  for (;;) {
+    const { status } = await provider.request({
+      method: 'wallet_getCallsStatus',
+      params: [bundleId],
+    }) as { status: number };
+    // 100 Pending | 200 Confirmed | 400 Offchain failure | 500 Onchain revert
+    if (status !== 100) return status;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Connect — wallet_connect opens the passkey prompt
 // ---------------------------------------------------------------------------
 
 $('btn-connect').addEventListener('click', async () => {
   const btn = $('btn-connect') as HTMLButtonElement;
-  btn.textContent = 'Connecting...';
-  disable(btn);
+  btn.textContent = 'Connecting…';
+  btn.disabled = true;
 
   try {
-    const result = await provider.request({
+    const { accounts } = await provider.request({
       method: 'wallet_connect',
       params: [{}],
-    });
+    }) as { accounts: { address: string }[] };
 
-    const address = (result as { accounts: { address: string }[] }).accounts[0]
-      ?.address;
-
-    if (address) {
-      setConnected(address);
+    if (accounts[0]) {
+      const chainHex = await provider.request({ method: 'eth_chainId' }) as string;
+      onConnect(accounts[0].address, parseInt(chainHex, 16));
     }
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    logEvent(`Connect error: ${message}`);
+  } catch (err) {
+    if (isUserRejection(err)) {
+      log('Connect cancelled');
+    } else {
+      log(`Connect error: ${err instanceof Error ? err.message : String(err)}`);
+    }
   } finally {
     btn.textContent = 'Connect Wallet';
-    enable(btn);
+    btn.disabled = false;
   }
 });
 
@@ -168,173 +149,157 @@ $('btn-connect').addEventListener('click', async () => {
 
 $('btn-disconnect').addEventListener('click', async () => {
   const btn = $('btn-disconnect') as HTMLButtonElement;
-  btn.textContent = 'Disconnecting...';
-  disable(btn);
+  btn.textContent = 'Disconnecting…';
+  btn.disabled = true;
 
   try {
-    await provider.request({
-      method: 'wallet_disconnect',
-    });
-    setDisconnected();
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    logEvent(`Disconnect error: ${message}`);
+    await provider.request({ method: 'wallet_disconnect' });
+    onDisconnect();
+  } catch (err) {
+    log(`Disconnect error: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
     btn.textContent = 'Disconnect';
-    enable(btn);
+    btn.disabled = false;
   }
 });
 
 // ---------------------------------------------------------------------------
-// Send ETH
+// Send ETH — bundles the transfer in a wallet_sendCalls user operation
 // ---------------------------------------------------------------------------
 
 $('btn-send').addEventListener('click', async () => {
   const to = ($('input-send-to') as HTMLInputElement).value.trim();
-  const amountStr = ($('input-send-amount') as HTMLInputElement).value.trim();
+  const amountEth = ($('input-send-amount') as HTMLInputElement).value.trim();
 
-  if (!to || !amountStr) {
-    renderResult('send-result', 'error', 'Missing fields', 'Enter a recipient address and an amount.');
+  if (!to || !amountEth) {
+    showResult('send-result', 'err', 'Missing fields', 'Enter a recipient address and an amount.');
     return;
   }
 
   const btn = $('btn-send') as HTMLButtonElement;
-  btn.textContent = 'Sending...';
-  disable(btn);
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
 
   try {
-    const value = `0x${parseEther(amountStr).toString(16)}`;
-
-    const txResult = await provider.request({
+    const { id } = await provider.request({
       method: 'wallet_sendCalls',
-      params: [
-        {
-          calls: [
-            {
-              to,
-              value,
-            },
-          ],
-        },
-      ],
-    });
+      params: [{ calls: [{ to, value: toHex(parseEther(amountEth)) }] }],
+    }) as { id: string };
 
-    renderResult(
-      'send-result',
-      'success',
-      'Transaction submitted',
-      typeof txResult === 'string' ? txResult : JSON.stringify(txResult),
-    );
-    logEvent(`Sent ${amountStr} ETH to ${to}`);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    renderResult('send-result', 'error', 'Transaction failed', message);
-    logEvent(`Send error: ${message}`);
+    btn.textContent = 'Confirming…';
+    showResult('send-result', 'ok', 'Confirming…', id);
+
+    const status = await waitForBundle(id);
+    if (status === 200) {
+      showResult('send-result', 'ok', 'Transaction confirmed', id);
+      log(`Sent ${amountEth} ETH → ${to}`);
+    } else {
+      showResult('send-result', 'err', `Transaction failed (status ${status})`, id);
+      log(`Send failed: status ${status}`);
+    }
+  } catch (err) {
+    if (isUserRejection(err)) {
+      log('Send cancelled');
+    } else {
+      const msg = err instanceof Error ? err.message : String(err);
+      showResult('send-result', 'err', 'Send failed', msg);
+      log(`Send error: ${msg}`);
+    }
   } finally {
     btn.textContent = 'Send ETH';
-    enable(btn);
+    btn.disabled = false;
   }
 });
 
 // ---------------------------------------------------------------------------
-// Sign Message
+// Sign Message — personal_sign (EIP-191)
 // ---------------------------------------------------------------------------
 
 $('btn-sign').addEventListener('click', async () => {
   const message = ($('input-sign-message') as HTMLInputElement).value;
 
   if (!message) {
-    renderResult('sign-result', 'error', 'Missing message', 'Enter a message to sign.');
-    return;
-  }
-
-  if (!connectedAddress) {
-    renderResult('sign-result', 'error', 'Not connected', 'Connect your wallet first.');
+    showResult('sign-result', 'err', 'Missing message', 'Enter a message to sign.');
     return;
   }
 
   const btn = $('btn-sign') as HTMLButtonElement;
-  btn.textContent = 'Signing...';
-  disable(btn);
+  btn.textContent = 'Signing…';
+  btn.disabled = true;
 
   try {
-    const messageHex = toHex(message);
-
-    const signature = await provider.request({
+    // personal_sign requires the message to be hex-encoded
+    const sig = await provider.request({
       method: 'personal_sign',
-      params: [messageHex, connectedAddress],
+      params: [toHex(message), connectedAddress],
     });
 
-    renderResult(
-      'sign-result',
-      'success',
-      'Message signed',
-      typeof signature === 'string' ? signature : JSON.stringify(signature),
-    );
-    logEvent(`Signed message: "${message}"`);
-  } catch (err: unknown) {
-    const message_ = err instanceof Error ? err.message : String(err);
-    renderResult('sign-result', 'error', 'Signing failed', message_);
-    logEvent(`Sign error: ${message_}`);
+    const sigStr = typeof sig === 'string' ? sig : JSON.stringify(sig);
+    showResult('sign-result', 'ok', 'Message signed', sigStr);
+    log(`Signed: "${message}"`);
+  } catch (err) {
+    if (isUserRejection(err)) {
+      log('Sign cancelled');
+    } else {
+      const msg = err instanceof Error ? err.message : String(err);
+      showResult('sign-result', 'err', 'Sign failed', msg);
+      log(`Sign error: ${msg}`);
+    }
   } finally {
     btn.textContent = 'Sign Message';
-    enable(btn);
+    btn.disabled = false;
   }
 });
 
 // ---------------------------------------------------------------------------
-// Clear event log
+// Clear log
 // ---------------------------------------------------------------------------
 
 $('btn-clear-log').addEventListener('click', () => {
-  $('event-log').innerHTML =
-    '<p class="text-gray-600">Waiting for events...</p>';
+  $('event-log').innerHTML = '<p class="placeholder text-gray-600">Waiting for events…</p>';
 });
 
 // ---------------------------------------------------------------------------
-// Provider Events
+// EIP-1193 events — the JAW provider fires standard wallet events
 // ---------------------------------------------------------------------------
 
 provider.on('accountsChanged', (accounts: string[]) => {
-  logEvent(`accountsChanged: ${JSON.stringify(accounts)}`);
-
+  log(`accountsChanged: ${JSON.stringify(accounts)}`);
   if (accounts.length > 0) {
     connectedAddress = accounts[0];
     $('account-address').textContent = accounts[0];
   } else {
-    setDisconnected();
+    onDisconnect();
   }
 });
 
 provider.on('chainChanged', (chainId: string) => {
-  logEvent(`chainChanged: ${chainId}`);
+  log(`chainChanged: ${chainId}`);
   $('account-chain').textContent = String(parseInt(chainId, 16));
 });
 
-provider.on('connect', (info: { chainId: string }) => {
-  logEvent(`connect: chainId ${info.chainId}`);
+provider.on('connect', ({ chainId }: { chainId: string }) => {
+  log(`connect event: chainId ${chainId}`);
 });
 
-provider.on('disconnect', (error: { code: number; message: string }) => {
-  logEvent(`disconnect: ${error.message}`);
-  setDisconnected();
+provider.on('disconnect', (error: Error) => {
+  log(`disconnect event: ${error.message}`);
+  onDisconnect();
 });
 
 // ---------------------------------------------------------------------------
-// On load: check for existing session
+// On load — restore an existing session if the user already connected before
 // ---------------------------------------------------------------------------
 
 (async () => {
   try {
-    const accounts = (await provider.request({
-      method: 'eth_accounts',
-    })) as string[];
-
+    const accounts = await provider.request({ method: 'eth_accounts' }) as string[];
     if (accounts.length > 0) {
-      setConnected(accounts[0]);
-      logEvent('Restored existing session');
+      const chainHex = await provider.request({ method: 'eth_chainId' }) as string;
+      onConnect(accounts[0], parseInt(chainHex, 16));
+      log('Session restored');
     }
   } catch {
-    // No existing session, nothing to do
+    // No active session, start fresh
   }
 })();
