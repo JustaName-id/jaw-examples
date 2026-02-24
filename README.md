@@ -4,25 +4,19 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
 
 ## Examples
 
-### `@jaw.id/wagmi` — React / Next.js
+### `@jaw.id/wagmi` — React / Next.js with wagmi
 
-| Example                                                        | Description                                     |
-| -------------------------------------------------------------- | ----------------------------------------------- |
-| [nextjs-quickstart](./examples/nextjs-quickstart)              | Connect & disconnect with passkey wallet         |
-| [nextjs-send-transaction](./examples/nextjs-send-transaction)  | Single & batch transactions                      |
-| [nextjs-sign-message](./examples/nextjs-sign-message)          | Personal sign & EIP-712 typed data               |
-| [nextjs-gas-sponsorship](./examples/nextjs-gas-sponsorship)    | Gasless transactions with paymaster              |
-| [nextjs-ens-profiles](./examples/nextjs-ens-profiles)          | ENS subnames & on-chain identity                 |
-| [nextjs-siwe](./examples/nextjs-siwe)                          | Sign-In With Ethereum (full-stack)               |
-| [nextjs-permissions](./examples/nextjs-permissions)             | Grant, list & revoke permissions                 |
-| [nextjs-subscription](./examples/nextjs-subscription)          | Subscription payments with delegated permissions |
+| Example | Description |
+| --- | --- |
+| [nextjs-wagmi](./examples/nextjs-wagmi) | Connect, sign, transact, permissions, ENS, SIWE, and subscriptions using the wagmi connector |
 
-### `@jaw.id/core` — Vanilla JS / Node.js
+### `@jaw.id/core` — Framework-agnostic
 
-| Example                                                        | Description                                     |
-| -------------------------------------------------------------- | ----------------------------------------------- |
-| [vanilla-quickstart](./examples/vanilla-quickstart)            | Core SDK usage without frameworks                |
-| [node-server-charge](./examples/node-server-charge)            | Server-side permission execution                 |
+| Example | Description |
+| --- | --- |
+| [nextjs-core](./examples/nextjs-core) | Same features as `nextjs-wagmi` using the raw JAW EIP-1193 provider (no wagmi) |
+| [nextjs-headless-mode](./examples/nextjs-headless-mode) | Headless `Account` API — create, login, import passkeys, sign, transact, and manage permissions |
+| [node-quickstart](./examples/node-quickstart) | Server-side smart account: sign messages, send and batch transactions in Node.js |
 
 ## Quick Start
 
@@ -30,7 +24,7 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
 2. Clone this repo
 3. Navigate to an example:
    ```bash
-   cd examples/nextjs-quickstart
+   cd examples/nextjs-wagmi
    ```
 4. Copy the environment file and add your API key:
    ```bash
@@ -39,7 +33,7 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
 5. Install and run:
    ```bash
    bun install
-   bun run dev
+   bun dev
    ```
 
 ## Documentation
