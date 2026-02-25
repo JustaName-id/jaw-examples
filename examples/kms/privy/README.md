@@ -32,7 +32,7 @@ A server-side example that uses [Privy Server Wallets](https://docs.privy.io/gui
 
    | Variable | Description |
    |---|---|
-   | `PRIVY_APP_ID` | Your Privy app ID from [console.privy.io](https://console.privy.io) |
+   | `PRIVY_APP_ID` | Your Privy app ID from [console.privy.io](https://dashboard.privy.io) |
    | `PRIVY_APP_SECRET` | Your Privy app secret |
    | `JAW_API_KEY` | Your API key from [dashboard.jaw.id](https://dashboard.jaw.id) |
 
