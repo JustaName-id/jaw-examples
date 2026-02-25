@@ -1,0 +1,19 @@
+{
+  "name": "@jaw-examples/kms-privy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --env-file=.env.local index.ts",
+    "start": "tsx --env-file=.env.local index.ts"
+  },
+  "dependencies": {
+    "@jaw.id/core": "latest",
+    "@privy-io/server-auth": "^1.18.4",
+    "viem": "^2.23.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "typescript": "^5.7.3"
+  }
+}
