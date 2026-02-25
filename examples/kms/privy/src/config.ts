@@ -1,9 +1,9 @@
 export const CHAIN_ID = 84532; // Base Sepolia
 
 export function getEnv() {
-  const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  const privyAppId = process.env.PRIVY_APP_ID;
   const privyAppSecret = process.env.PRIVY_APP_SECRET;
-  const jawApiKey = process.env.NEXT_PUBLIC_API_KEY;
+  const jawApiKey = process.env.JAW_API_KEY;
 
   if (!privyAppId || !privyAppSecret || !jawApiKey) {
     console.error('Missing required environment variables:');
