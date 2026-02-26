@@ -12,67 +12,68 @@ export function SignInButton() {
   const [verifiedAddress, setVerifiedAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSignIn = useCallback(() => {
+  const handleSignIn = useCallback(async () => {
     setError(null);
 
-    fetch("/api/siwe/nonce")
-      .then((res) => res.json())
-      .then(({ nonce }) => {
-        connect(
-          {
-            connector: config.connectors[0],
-            capabilities: {
-              signInWithEthereum: {
-                nonce,
-                chainId: "0xaa36a7",
-                domain: window.location.host,
-                uri: window.location.origin,
-                statement: "Sign in to JAW SIWE Demo",
-                expirationTime: new Date(
-                  Date.now() + 60 * 60 * 1000
-                ).toISOString(),
-              },
-            },
+    let nonce: string;
+    try {
+      const res = await fetch("/api/siwe/nonce");
+      const data = await res.json();
+      nonce = data.nonce;
+    } catch {
+      setError("Failed to fetch nonce from server.");
+      return;
+    }
+
+    connect(
+      {
+        connector: config.connectors[0],
+        capabilities: {
+          signInWithEthereum: {
+            nonce,
+            chainId: "0x14a34",
+            domain: window.location.host,
+            uri: window.location.origin,
+            statement: "Sign in to JAW SIWE Demo",
+            expirationTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
           },
-          {
-            onSuccess: async (data) => {
-              const siweResponse =
-                data.accounts[0].capabilities?.signInWithEthereum;
+        },
+      },
+      {
+        onSuccess: async (data) => {
+          const siweResponse =
+            data.accounts[0].capabilities?.signInWithEthereum;
 
-              if (siweResponse && "message" in siweResponse) {
-                try {
-                  const verifyRes = await fetch("/api/siwe/verify", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      message: siweResponse.message,
-                      signature: siweResponse.signature,
-                    }),
-                  });
+          if (siweResponse && "message" in siweResponse) {
+            try {
+              const verifyRes = await fetch("/api/siwe/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  message: siweResponse.message,
+                  signature: siweResponse.signature,
+                }),
+              });
 
-                  if (!verifyRes.ok) {
-                    setError("Server rejected the signature.");
-                    return;
-                  }
-
-                  const { address: verified } = await verifyRes.json();
-                  setVerifiedAddress(verified);
-                } catch {
-                  setError("Verification request failed.");
-                }
-              } else {
-                setError("SIWE response missing from wallet.");
+              if (!verifyRes.ok) {
+                setError("Server rejected the signature.");
+                return;
               }
-            },
-            onError: (err) => {
-              setError(err.message || "Connection failed.");
-            },
+
+              const { address: verified } = await verifyRes.json();
+              setVerifiedAddress(verified);
+            } catch {
+              setError("Verification request failed.");
+            }
+          } else {
+            setError("SIWE response missing from wallet.");
           }
-        );
-      })
-      .catch(() => {
-        setError("Failed to fetch nonce from server.");
-      });
+        },
+        onError: (err) => {
+          setError(err.message || "Connection failed.");
+        },
+      }
+    );
   }, [connect]);
 
   const handleSignOut = useCallback(() => {

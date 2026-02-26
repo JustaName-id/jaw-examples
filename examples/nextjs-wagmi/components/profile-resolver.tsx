@@ -14,15 +14,15 @@ interface ProfileResult {
   textRecords: TextRecord[];
 }
 
-let justaNameInstance: Awaited<ReturnType<typeof JustaName.init>> | null = null;
+let justaNameInstance: ReturnType<typeof JustaName.init> | null = null;
 
-async function getJustaName() {
+function getJustaName() {
   if (!justaNameInstance) {
-    justaNameInstance = await JustaName.init({
+    justaNameInstance = JustaName.init({
       networks: [
         {
-          chainId: 84532,
-          providerUrl: `https://base-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
+          chainId: 1,
+          providerUrl: `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
         },
       ],
     });
@@ -49,12 +49,12 @@ export function ProfileResolver() {
     setProfile(null);
 
     try {
-      const justaName = await getJustaName();
+      const justaName = getJustaName();
 
       if (isAddress(trimmed)) {
         const result = await justaName.subnames.reverseResolve({
           address: trimmed,
-          chainId: 84532,
+          chainId: 1,
         });
 
         if (!result) {
@@ -62,7 +62,7 @@ export function ProfileResolver() {
           return;
         }
 
-        const name = typeof result === 'string' ? result : result.name ?? result.ens ?? String(result);
+        const name = result;
 
         const records = await justaName.subnames.getRecords({
           ens: name,
@@ -186,29 +186,15 @@ export function ProfileResolver() {
 
 function extractTextRecords(records: unknown): TextRecord[] {
   if (!records || typeof records !== 'object') return [];
-
   const rec = records as Record<string, unknown>;
-
-  if (Array.isArray(rec.texts)) {
-    return (rec.texts as Array<Record<string, string>>)
+  if (
+    rec.records &&
+    typeof rec.records === 'object' &&
+    Array.isArray((rec.records as Record<string, unknown>).texts)
+  ) {
+    return ((rec.records as Record<string, unknown>).texts as Array<Record<string, string>>)
       .filter((t) => t.key && t.value)
       .map((t) => ({ key: t.key, value: t.value }));
   }
-
-  if (rec.textRecords && typeof rec.textRecords === 'object') {
-    return Object.entries(rec.textRecords as Record<string, string>)
-      .filter(([, v]) => v)
-      .map(([k, v]) => ({ key: k, value: v }));
-  }
-
-  if (rec.records && typeof rec.records === 'object') {
-    const inner = rec.records as Record<string, unknown>;
-    if (inner.texts && typeof inner.texts === 'object') {
-      return Object.entries(inner.texts as Record<string, string>)
-        .filter(([, v]) => v)
-        .map(([k, v]) => ({ key: k, value: v }));
-    }
-  }
-
   return [];
 }

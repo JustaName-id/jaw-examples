@@ -29,10 +29,18 @@ export function SignInButton() {
     setError(null);
     setIsConnecting(true);
 
+    let nonce: string;
     try {
       const nonceRes = await fetch("/api/siwe/nonce");
-      const { nonce } = await nonceRes.json();
+      const data = await nonceRes.json();
+      nonce = data.nonce;
+    } catch {
+      setError("Failed to fetch nonce from server.");
+      setIsConnecting(false);
+      return;
+    }
 
+    try {
       // wallet_connect with SIWE capability — must use wallet_connect, not eth_requestAccounts
       const result = await jaw.provider.request({
         method: "wallet_connect",
@@ -40,7 +48,7 @@ export function SignInButton() {
           capabilities: {
             signInWithEthereum: {
               nonce,
-              chainId: "0xaa36a7",
+              chainId: "0x14a34",
               domain: window.location.host,
               uri: window.location.origin,
               statement: "Sign in to JAW SIWE Demo",
