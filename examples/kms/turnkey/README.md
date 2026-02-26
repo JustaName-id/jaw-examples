@@ -20,14 +20,9 @@ A server-side example that uses [Turnkey](https://www.turnkey.com/) as the key m
 
 ## Setup
 
-1. Install dependencies:
+1. Copy the environment file and fill in your values:
    ```bash
-   npm install
-   ```
-
-2. Copy the environment file and fill in your values:
-   ```bash
-   cp .env.example .env.local
+   cp examples/kms/turnkey/.env.example examples/kms/turnkey/.env.local
    ```
 
    | Variable | Description |
@@ -39,9 +34,9 @@ A server-side example that uses [Turnkey](https://www.turnkey.com/) as the key m
 
    > **Note:** Create an API key pair in your Turnkey dashboard under **API Keys**.
 
-3. Run the script:
+2. From the repo root, run:
    ```bash
-   npm run dev
+   npx nx dev kms-turnkey
    ```
 
 ## Expected Output

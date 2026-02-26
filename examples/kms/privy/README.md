@@ -20,14 +20,9 @@ A server-side example that uses [Privy Server Wallets](https://docs.privy.io/gui
 
 ## Setup
 
-1. Install dependencies:
+1. Copy the environment file and fill in your values:
    ```bash
-   npm install
-   ```
-
-2. Copy the environment file and fill in your values:
-   ```bash
-   cp .env.example .env.local
+   cp examples/kms/privy/.env.example examples/kms/privy/.env.local
    ```
 
    | Variable | Description |
@@ -38,9 +33,9 @@ A server-side example that uses [Privy Server Wallets](https://docs.privy.io/gui
 
    > **Note:** Enable **Server Wallets** in your Privy dashboard under the **Server Wallets** tab.
 
-3. Run the script:
+2. From the repo root, run:
    ```bash
-   npm run dev
+   npx nx dev kms-privy
    ```
 
 ## Expected Output
