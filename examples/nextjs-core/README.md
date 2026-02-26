@@ -28,10 +28,9 @@ A multi-page Next.js app demonstrating every major JAW SDK feature using the `@j
    | `SPENDER_PRIVATE_KEY` | Subscription | Private key of the server-side spender account |
    | `JAW_API_KEY` | Subscription | Server-side API key (same value as the public one) |
 
-2. Install and run:
+2. From the repo root, run:
    ```bash
-   bun install
-   bun dev
+   npx nx dev nextjs-core
    ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the example gallery.

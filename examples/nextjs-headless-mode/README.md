@@ -15,7 +15,7 @@ A Next.js app demonstrating the headless `Account` API from `@jaw.id/core` — d
 
 1. Copy the environment file:
    ```bash
-   cp .env.example .env.local
+   cp examples/nextjs-headless-mode/.env.example examples/nextjs-headless-mode/.env.local
    ```
 
 2. Fill in your values:
@@ -24,10 +24,9 @@ A Next.js app demonstrating the headless `Account` API from `@jaw.id/core` — d
    | --- | --- | --- |
    | `NEXT_PUBLIC_JAW_API_KEY` | Yes | API key from [dashboard.jaw.id](https://dashboard.jaw.id) |
 
-3. Install and run:
+3. From the repo root, run:
    ```bash
-   bun install
-   bun dev
+   npx nx dev nextjs-headless-mode
    ```
 
 Open [http://localhost:3000](http://localhost:3000) to get started.

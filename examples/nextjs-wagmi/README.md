@@ -19,7 +19,7 @@ A multi-page Next.js app demonstrating every major JAW SDK feature using the `@j
 
 1. Copy the environment file:
    ```bash
-   cp .env.example .env.local
+   cp examples/nextjs-wagmi/.env.example examples/nextjs-wagmi/.env.local
    ```
 
 2. Fill in your values:
@@ -33,10 +33,9 @@ A multi-page Next.js app demonstrating every major JAW SDK feature using the `@j
    | `SPENDER_PRIVATE_KEY` | Subscription | Private key of the server-side spender account |
    | `JAW_API_KEY` | Subscription | Server-side API key (same value as the public one) |
 
-3. Install and run:
+3. From the repo root, run:
    ```bash
-   bun install
-   bun dev
+   npx nx dev nextjs-wagmi
    ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the example gallery.

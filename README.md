@@ -18,23 +18,30 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
 | [nextjs-headless-mode](./examples/nextjs-headless-mode) | Headless `Account` API — create, login, import passkeys, sign, transact, and manage permissions |
 | [node-quickstart](./examples/node-quickstart) | Server-side smart account: sign messages, send and batch transactions in Node.js |
 
+### KMS Integrations — Server-side key management
+
+| Example | Description |
+| --- | --- |
+| [kms/turnkey](./examples/kms/turnkey) | JAW smart accounts backed by [Turnkey](https://turnkey.com) server wallets |
+| [kms/privy](./examples/kms/privy) | JAW smart accounts backed by [Privy](https://privy.io) server wallets |
+
 ## Quick Start
 
 1. Get an API key at [dashboard.jaw.id](https://dashboard.jaw.id)
-2. Clone this repo
-3. Navigate to an example:
-   ```bash
-   cd examples/nextjs-wagmi
-   ```
-4. Copy the environment file and add your API key:
-   ```bash
-   cp .env.example .env.local
-   ```
-5. Install and run:
+2. Clone this repo and install all dependencies once from the root:
    ```bash
    bun install
-   bun dev
    ```
+3. Copy the environment file for the example you want to run and fill in your keys:
+   ```bash
+   cp examples/nextjs-wagmi/.env.example examples/nextjs-wagmi/.env.local
+   ```
+4. Run any example from the root:
+   ```bash
+   npx nx dev nextjs-wagmi
+   ```
+
+   Replace `nextjs-wagmi` with any example name: `nextjs-core`, `nextjs-headless-mode`, `node-quickstart`, `kms-turnkey`, or `kms-privy`.
 
 ## Documentation
 

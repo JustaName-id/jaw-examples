@@ -13,14 +13,9 @@ A minimal Node.js script that walks through the core JAW backend API step by ste
 
 ## Setup
 
-1. Install dependencies:
+1. Copy the environment file and fill in your values:
    ```bash
-   bun install
-   ```
-
-2. Copy the environment file and fill in your values:
-   ```bash
-   cp .env.example .env
+   cp examples/node-quickstart/.env.example examples/node-quickstart/.env
    ```
 
    | Variable | Description |
@@ -31,9 +26,9 @@ A minimal Node.js script that walks through the core JAW backend API step by ste
 
    > Your account needs ~0.001 ETH on Base to cover the amounts and gas for Steps 3 & 4.
 
-3. Run the script:
+2. From the repo root, run:
    ```bash
-   bun run dev
+   npx nx dev node-quickstart
    ```
 
 ## Expected Output
