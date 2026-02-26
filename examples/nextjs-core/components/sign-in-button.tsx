@@ -29,6 +29,11 @@ export function SignInButton() {
     setError(null);
     setIsConnecting(true);
 
+    // Clear any existing JAW session so wallet_connect goes through the
+    // unauthenticated path and shows the popup with the SIWE request.
+    // If skipped, a cached session returns cached capabilities (no SIWE data).
+    try { await jaw.provider.request({ method: "wallet_disconnect" }); } catch { /* ignore */ }
+
     let nonce: string;
     try {
       const nonceRes = await fetch("/api/siwe/nonce");

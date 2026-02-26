@@ -6,14 +6,21 @@ import { useConnect, useDisconnect } from "@jaw.id/wagmi";
 import { config } from "@/lib/config";
 
 export function SignInButton() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { mutate: connect, isPending: isConnecting } = useConnect();
-  const { mutate: disconnect, isPending: isDisconnecting } = useDisconnect();
+  const { mutate: disconnect, mutateAsync: disconnectAsync, isPending: isDisconnecting } = useDisconnect();
   const [verifiedAddress, setVerifiedAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = useCallback(async () => {
     setError(null);
+
+    // Clear any existing JAW session so wallet_connect goes through the
+    // unauthenticated path and shows the popup with the SIWE request.
+    // If skipped, a cached session returns cached capabilities (no SIWE data).
+    if (isConnected) {
+      try { await disconnectAsync({}); } catch { /* ignore */ }
+    }
 
     let nonce: string;
     try {
@@ -74,7 +81,7 @@ export function SignInButton() {
         },
       }
     );
-  }, [connect]);
+  }, [connect, disconnectAsync, isConnected]);
 
   const handleSignOut = useCallback(() => {
     fetch("/api/siwe/logout", { method: "POST" }).then(() => {
@@ -84,7 +91,7 @@ export function SignInButton() {
     });
   }, [disconnect]);
 
-  if (isConnected && verifiedAddress) {
+  if (verifiedAddress) {
     return (
       <div className="flex flex-col gap-4">
         <div className="rounded-lg border border-green-800/50 bg-green-950/30 px-4 py-3">
