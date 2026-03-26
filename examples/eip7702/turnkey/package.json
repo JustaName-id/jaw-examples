@@ -1,0 +1,20 @@
+{
+  "name": "@jaw-examples/eip7702-turnkey",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --env-file=.env.local index.ts",
+    "start": "tsx --env-file=.env.local index.ts"
+  },
+  "dependencies": {
+    "@jaw.id/core": "latest",
+    "@turnkey/sdk-server": "^5.1.0",
+    "@turnkey/viem": "^0.14.24",
+    "viem": "^2"
+  },
+  "devDependencies": {
+    "tsx": "^4",
+    "typescript": "^5"
+  }
+}
