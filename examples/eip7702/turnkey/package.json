@@ -3,9 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "nx": {
+    "name": "eip7702-turnkey",
+    "projectType": "application",
+    "targets": {
+      "dev": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "tsx --env-file=.env index.ts",
+          "cwd": "{projectRoot}"
+        }
+      }
+    }
+  },
   "scripts": {
-    "dev": "tsx --env-file=.env.local index.ts",
-    "start": "tsx --env-file=.env.local index.ts"
+    "dev": "tsx --env-file=.env index.ts",
+    "start": "tsx --env-file=.env index.ts"
   },
   "dependencies": {
     "@jaw.id/core": "latest",
@@ -14,6 +27,7 @@
     "viem": "^2"
   },
   "devDependencies": {
+    "@types/node": "^22",
     "tsx": "^4",
     "typescript": "^5"
   }

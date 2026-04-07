@@ -90,7 +90,7 @@ async function sendTransaction(account: Account) {
   console.log(`  Sending ${amountStr.trim()} ETH to ${recipient}...`);
   try {
     const txHash = await account.sendTransaction([
-      { to: recipient, value: amount, data: '0x' },
+      { to: recipient, value: amount },
     ]);
     console.log(`  Tx hash:  ${txHash}`);
     console.log(`  Explorer: https://sepolia.basescan.org/tx/${txHash}\n`);
