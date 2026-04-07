@@ -23,6 +23,8 @@ Reference these guidelines when:
 - Implementing Sign-In With Ethereum (SIWE)
 - Building headless integrations, server-side operations, or AI agent wallets
 - Using the Account class directly (no UI)
+- Upgrading EOAs to smart accounts via EIP-7702 (preserving the existing address)
+- Integrating with embedded wallet providers (Privy, Turnkey, etc) for EIP-7702
 - Building stablecoin payment flows (USDC gas, batch payouts)
 - Choosing between CrossPlatform and AppSpecific authentication modes
 - Implementing a custom UI handler for app-specific mode
@@ -34,6 +36,7 @@ Reference these guidelines when:
 - **API Key:** Required. Get one at [https://dashboard.jaw.id](https://dashboard.jaw.id)
 - **EIP-1193 compatible:** Drop-in replacement for MetaMask or any wallet
 - **Smart accounts:** ERC-4337 with passkey signers, gasless tx, batch ops, permissions
+- **EIP-7702:** EOAs can upgrade to smart accounts while keeping their address via `Account.fromLocalAccount(config, localAccount, { eip7702: true })`
 - **EntryPoint:** v0.8 only (for paymasters)
 
 ## Rule index
@@ -48,6 +51,7 @@ Reference these guidelines when:
 
 - <rules/wagmi-setup.md> - Wagmi connector setup, providers, using standard wagmi hooks with JAW
 - <rules/connect-disconnect.md> - useConnect, useDisconnect, connection with capabilities
+- <rules/reown-appkit.md> - Adding JAW to an existing Reown AppKit project via WagmiAdapter
 
 ### 3. Core Operations
 
@@ -66,13 +70,17 @@ Reference these guidelines when:
 - <rules/siwe.md> - Sign-In With Ethereum (SIWE) implementation
 - <rules/gas-sponsoring.md> - Paymaster setup, sponsorship policies, multi-chain config
 
-### 6. Advanced
+### 6. EIP-7702
+
+- <rules/eip7702-upgrade.md> - Upgrade EOA to smart account, provider integrations, authorization signing
+
+### 7. Advanced
 
 - <rules/account-api.md> - Headless Account class for AI agents, server-side, embedded wallets
 - <rules/custom-ui-handler.md> - Building a custom UIHandler for app-specific mode
 - <rules/provider-api.md> - Direct provider RPC methods reference and patterns
 
-### 7. Reference
+### 8. Reference
 
 - <rules/error-handling.md> - EIP-1193 error codes, common errors, debugging
 - <rules/typescript-types.md> - Key TypeScript interfaces and type patterns

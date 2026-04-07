@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Account } from '@jaw.id/core';
 import { privateKeyToAccount } from 'viem/accounts';
-import { formatEther, parseEther } from 'viem';
+import { parseEther } from 'viem';
 
 // ---------------------------------------------------------------------------
 // Configuration — all values come from .env
@@ -95,6 +95,10 @@ async function main() {
   }
 
   // ── Step 4: Second call — no delegation overhead ────────────────────────
+  //
+  // Delegation is already active from Step 3, so this call skips
+  // authorization and just sends. You MUST still poll getCallStatus
+  // after sendCalls — it returns before the transaction is mined.
 
   console.log('\nStep 4 — Second call (delegation already active, just sends)');
 
@@ -103,6 +107,19 @@ async function main() {
   ]);
 
   console.log(`  userOp hash : ${id2}`);
+  process.stdout.write('  waiting     : ');
+
+  for (;;) {
+    const status2 = account.getCallStatus(id2);
+    if (status2 && status2.status !== 100) {
+      const label = status2.status === 200 ? 'confirmed' : `failed (code ${status2.status})`;
+      console.log(label);
+      break;
+    }
+    process.stdout.write('.');
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+
   console.log('\n✓ All steps complete.\n');
 }
 
