@@ -1,7 +1,7 @@
 {
   "name": "jaw-examples",
   "private": true,
-  "workspaces": ["examples/*","examples/kms/*"],
+  "workspaces": ["examples/*","examples/kms/*","examples/eip7702/*"],
   "scripts": {
     "dev": "nx dev",
     "build": "nx run-many -t build"

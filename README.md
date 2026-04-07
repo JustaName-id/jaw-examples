@@ -18,6 +18,14 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
 | [nextjs-headless-mode](./examples/nextjs-headless-mode) | Headless `Account` API — create, login, import passkeys, sign, transact, and manage permissions |
 | [node-quickstart](./examples/node-quickstart) | Server-side smart account: sign messages, send and batch transactions in Node.js |
 
+### EIP-7702 — Upgrade EOA to smart account
+
+| Example | Description |
+| --- | --- |
+| [eip7702/node-quickstart](./examples/eip7702/node-quickstart) | Upgrade a private key EOA via EIP-7702 — sign, send, and batch in Node.js |
+| [eip7702/turnkey](./examples/eip7702/turnkey) | Interactive CLI upgrading a [Turnkey](https://turnkey.com) wallet via EIP-7702 |
+| [eip7702/privy-nextjs](./examples/eip7702/privy-nextjs) | Next.js app upgrading a [Privy](https://privy.io) embedded wallet via EIP-7702 |
+
 ### KMS Integrations — Server-side key management
 
 | Example | Description |
@@ -41,7 +49,7 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
    npx nx dev nextjs-wagmi
    ```
 
-   Replace `nextjs-wagmi` with any example name: `nextjs-core`, `nextjs-headless-mode`, `node-quickstart`, `kms-turnkey`, or `kms-privy`.
+   Replace `nextjs-wagmi` with any example name: `nextjs-core`, `nextjs-headless-mode`, `node-quickstart`, `eip7702-node-quickstart`, `eip7702-turnkey`, `eip7702-privy-nextjs`, `kms-turnkey`, or `kms-privy`.
 
 ## Documentation
 
