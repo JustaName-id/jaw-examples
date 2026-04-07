@@ -8,7 +8,7 @@ import {
   toViemAccount,
   getEmbeddedConnectedWallet,
 } from '@privy-io/react-auth';
-import { parseEther, type LocalAccount } from 'viem';
+import { parseEther } from 'viem';
 import { Account } from '@jaw.id/core';
 import { Providers } from './providers';
 
@@ -57,7 +57,7 @@ function Content() {
       // { eip7702: true } preserves the EOA address as the smart account address
       const acc = await Account.fromLocalAccount(
         { chainId: CHAIN_ID, apiKey: JAW_API_KEY },
-        localAccount as unknown as LocalAccount,
+        localAccount as any,
         { eip7702: true },
       );
 
@@ -103,6 +103,20 @@ function Content() {
         { to: account.address, value: parseEther('0.0001') },
       ]);
       addLog(`UserOp hash: ${id}`);
+      addLog('Polling for confirmation...');
+
+      // You MUST poll getCallStatus after sendCalls — it returns before the tx is mined
+      for (;;) {
+        const callStatus = account.getCallStatus(id);
+        if (callStatus && callStatus.status !== 100) {
+          const label = callStatus.status === 200
+            ? 'confirmed'
+            : `failed (code ${callStatus.status})`;
+          addLog(`Status: ${label}`);
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 1000));
+      }
     } catch (err) {
       addLog(`Send failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
