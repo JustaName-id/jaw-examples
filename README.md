@@ -33,6 +33,19 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
 | [kms/turnkey](./examples/kms/turnkey) | JAW smart accounts backed by [Turnkey](https://turnkey.com) server wallets |
 | [kms/privy](./examples/kms/privy) | JAW smart accounts backed by [Privy](https://privy.io) server wallets |
 
+### Minimal single-feature (Vite + React)
+
+Tiny, focused demos — one integration and one post-connect action each. They also show the **embedded iframe** (default) vs **popup** transport explicitly.
+
+| Example | Transport | Shows |
+| --- | --- | --- |
+| [wagmi-sign-message](./examples/wagmi-sign-message) | iframe | `personal_sign` via the wagmi connector |
+| [wagmi-siwe-popup](./examples/wagmi-siwe-popup) | popup | Sign-In with Ethereum (EIP-4361) |
+| [wagmi-gasless-sendcalls](./examples/wagmi-gasless-sendcalls) | iframe | gasless batched `wallet_sendCalls` (EIP-5792) with an ERC-20 paymaster |
+| [wagmi-grant-permissions-popup](./examples/wagmi-grant-permissions-popup) | popup | grant a scoped permission (ERC-7715) |
+| [wagmi-ens-identity](./examples/wagmi-ens-identity) | iframe | resolve the account's ENS subname |
+| [core-popup-capabilities](./examples/core-popup-capabilities) | popup | `wallet_getCapabilities` (EIP-5792) via the raw provider, no wagmi |
+
 ## Quick Start
 
 1. Get an API key at [dashboard.jaw.id](https://dashboard.jaw.id)
@@ -49,7 +62,7 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
    npx nx dev nextjs-wagmi
    ```
 
-   Replace `nextjs-wagmi` with any example name: `nextjs-core`, `nextjs-headless-mode`, `node-quickstart`, `eip7702-node-quickstart`, `eip7702-turnkey`, `eip7702-privy-nextjs`, `kms-turnkey`, or `kms-privy`.
+   Replace `nextjs-wagmi` with any example name: `nextjs-core`, `nextjs-headless-mode`, `node-quickstart`, `eip7702-node-quickstart`, `eip7702-turnkey`, `eip7702-privy-nextjs`, `kms-turnkey`, `kms-privy`, `wagmi-sign-message`, `wagmi-siwe-popup`, `wagmi-gasless-sendcalls`, `wagmi-grant-permissions-popup`, `wagmi-ens-identity`, or `core-popup-capabilities`.
 
 ## Documentation
 
