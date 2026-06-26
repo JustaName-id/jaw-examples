@@ -16,6 +16,7 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
 | --- | --- |
 | [nextjs-core](./examples/nextjs-core) | Same features as `nextjs-wagmi` using the raw JAW EIP-1193 provider (no wagmi) |
 | [nextjs-headless-mode](./examples/nextjs-headless-mode) | Headless `Account` API — create, login, import passkeys, sign, transact, and manage permissions |
+| [nextjs-coinbase-onramp](./examples/nextjs-coinbase-onramp) | Buy USDC on Base into a passkey account via Coinbase guest checkout — phone OTP, payment iframe, and live order status |
 | [node-quickstart](./examples/node-quickstart) | Server-side smart account: sign messages, send and batch transactions in Node.js |
 
 ### EIP-7702 — Upgrade EOA to smart account
@@ -49,7 +50,7 @@ Official examples for the [JAW SDK](https://docs.jaw.id) — identity-first smar
    npx nx dev nextjs-wagmi
    ```
 
-   Replace `nextjs-wagmi` with any example name: `nextjs-core`, `nextjs-headless-mode`, `node-quickstart`, `eip7702-node-quickstart`, `eip7702-turnkey`, `eip7702-privy-nextjs`, `kms-turnkey`, or `kms-privy`.
+   Replace `nextjs-wagmi` with any example name: `nextjs-core`, `nextjs-headless-mode`, `nextjs-coinbase-onramp`, `node-quickstart`, `eip7702-node-quickstart`, `eip7702-turnkey`, `eip7702-privy-nextjs`, `kms-turnkey`, or `kms-privy`.
 
 ## Documentation
 
