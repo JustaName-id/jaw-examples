@@ -60,6 +60,8 @@ export function SignMessage() {
         messageObj[f.name] = f.value || (f.type === "address" ? account.address : "");
       }
 
+      // Typed data is built dynamically from user input, so it can't satisfy
+      // viem's statically-typed TypedData generics; cast the runtime-built args.
       const sig = await account.signTypedData({
         domain: {
           name: domainName,
@@ -69,7 +71,7 @@ export function SignMessage() {
         types,
         primaryType,
         message: messageObj,
-      });
+      } as unknown as Parameters<typeof account.signTypedData>[0]);
       setTypedSig(sig);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Typed data signing failed");

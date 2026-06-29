@@ -18,7 +18,7 @@ export function SendTransaction() {
   const { account } = useAccount();
 
   // Single tx state
-  const [recipient, setRecipient] = useState(DUMMY_RECIPIENT);
+  const [recipient, setRecipient] = useState<string>(DUMMY_RECIPIENT);
   const [amount, setAmount] = useState("0.0001");
   const [txHash, setTxHash] = useState<string | null>(null);
 
