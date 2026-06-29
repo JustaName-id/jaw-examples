@@ -53,7 +53,8 @@ export function ProfileResolver() {
 
       if (isAddress(trimmed)) {
         const result = await justaName.subnames.reverseResolve({
-          address: trimmed,
+          // isAddress above guarantees the 0x-prefixed address shape.
+          address: trimmed as `0x${string}`,
           chainId: 1,
         });
 

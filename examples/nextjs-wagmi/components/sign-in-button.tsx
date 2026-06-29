@@ -48,10 +48,14 @@ export function SignInButton() {
       },
       {
         onSuccess: async (data) => {
+          // An account entry is either a bare address or an object with capabilities.
+          const account = data.accounts[0];
           const siweResponse =
-            data.accounts[0].capabilities?.signInWithEthereum;
+            typeof account === "object"
+              ? account.capabilities?.signInWithEthereum
+              : undefined;
 
-          if (siweResponse && "message" in siweResponse) {
+          if (siweResponse && "signature" in siweResponse) {
             try {
               const verifyRes = await fetch("/api/siwe/verify", {
                 method: "POST",
