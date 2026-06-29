@@ -35,14 +35,19 @@ async function main() {
 
   console.log('Step 1 — Create EIP-7702 account');
 
-  const signer = privateKeyToAccount(PRIVATE_KEY);
+  // Guaranteed defined by the env guard above; TS doesn't carry that narrowing
+  // of module-level consts into this nested function, so assert it here.
+  const signer = privateKeyToAccount(PRIVATE_KEY!);
   const account = await Account.fromLocalAccount(
     {
       chainId: CHAIN_ID,
-      apiKey: JAW_API_KEY,
+      apiKey: JAW_API_KEY!,
       ...(PAYMASTER_URL ? { paymasterUrl: PAYMASTER_URL } : {}),
     },
-    signer,
+    // The example's direct viem and @jaw.id/core's viem can resolve to two
+    // different versions in this workspace; the LocalAccount shape is identical
+    // but nominally distinct, so bridge it to the parameter type here.
+    signer as Parameters<typeof Account.fromLocalAccount>[1],
     { eip7702: true },
   );
 
@@ -84,7 +89,7 @@ async function main() {
   process.stdout.write('  waiting     : ');
 
   for (;;) {
-    const status = account.getCallStatus(id);
+    const status = await account.getCallStatus(id);
     if (status && status.status !== 100) {
       const label = status.status === 200 ? 'confirmed' : `failed (code ${status.status})`;
       console.log(label);
@@ -110,7 +115,7 @@ async function main() {
   process.stdout.write('  waiting     : ');
 
   for (;;) {
-    const status2 = account.getCallStatus(id2);
+    const status2 = await account.getCallStatus(id2);
     if (status2 && status2.status !== 100) {
       const label = status2.status === 200 ? 'confirmed' : `failed (code ${status2.status})`;
       console.log(label);
