@@ -130,10 +130,9 @@ export function OnrampWidget({
     !Number.isNaN(amountNum) &&
     amountNum >= ONRAMP_MIN_FIAT &&
     amountNum <= ONRAMP_MAX_FIAT;
-  const formValid =
-    /^\+1\d{10}$/.test(phoneNumber.trim()) &&
-    /.+@.+\..+/.test(email.trim()) &&
-    amountValid;
+  const phoneValid = /^\+1\d{10}$/.test(phoneNumber.trim());
+  const emailValid = /.+@.+\..+/.test(email.trim());
+  const formValid = phoneValid && emailValid && amountValid;
 
   return (
     <div className="space-y-6">
@@ -158,6 +157,12 @@ export function OnrampWidget({
                 placeholder="+12025550123"
                 className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
               />
+              {phoneNumber.trim() !== "+1" && !phoneValid && (
+                <p className="mt-1 text-xs text-amber-400">
+                  US format: +1 followed by 10 digits (e.g. +12025550123). The
+                  OTP code comes later.
+                </p>
+              )}
             </div>
 
             <div>
@@ -182,6 +187,11 @@ export function OnrampWidget({
                 placeholder="25.00"
                 className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
               />
+              {fiatAmount.trim() !== "" && !amountValid && (
+                <p className="mt-1 text-xs text-amber-400">
+                  Enter an amount between ${ONRAMP_MIN_FIAT} and ${ONRAMP_MAX_FIAT}.
+                </p>
+              )}
             </div>
 
             <div>
@@ -219,6 +229,11 @@ export function OnrampWidget({
             >
               {isLoading ? "Sending code..." : "Continue"}
             </button>
+            {!formValid && !isLoading && (
+              <p className="text-center text-xs text-gray-500">
+                Fill a valid US phone, email, and amount to continue.
+              </p>
+            )}
           </div>
         </div>
       )}
