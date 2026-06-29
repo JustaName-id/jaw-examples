@@ -9,8 +9,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@jaw.id/core": "latest",
-    "@jaw.id/wagmi": "latest",
+    "@jaw.id/core": "^1.0.3",
+    "@jaw.id/wagmi": "^1.0.3",
     "@tanstack/react-query": "^5.62.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
