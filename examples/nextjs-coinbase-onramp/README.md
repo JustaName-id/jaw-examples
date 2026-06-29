@@ -25,12 +25,16 @@ Browser ──► /api/onramp/start        ──► proxy /proxy/v2/onramp/star
 
 1. **Connect** a passkey account on `/`. Its address is the on-ramp destination.
 2. On `/buy`, enter US phone (E.164 `+1…`), email, and amount ($2–$500).
-3. `POST /start` → proxy sends an SMS OTP via Twilio Verify.
+3. `POST /start` → proxy sends the OTP. With the proxy's `twilio` provider this
+   is a real SMS; with the `mock` provider (local/sandbox) no SMS is sent and the
+   code is whatever `ONRAMP_MOCK_OTP_CODE` is on the proxy (default `000000`).
 4. Enter the code → `POST /validate-otp` → proxy creates the Coinbase order and
    returns an `embeddable.url`.
 5. The app embeds that URL in an `<iframe allow="payment">` for Apple/Google Pay.
 6. The app polls `GET /orders/:id` every 4s until `COMPLETED` / `FAILED` /
-   `EXPIRED`. Settlement is driven by the Coinbase webhook hitting the proxy.
+   `EXPIRED`. In production the Coinbase webhook to the proxy drives the final
+   status; locally the polled value reflects Coinbase's live order status
+   directly (Coinbase can't reach a `localhost` webhook).
 
 ## Setup
 
